@@ -23,31 +23,38 @@ export default function SignIn() {
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const handleLogin = async (event: SubmitEvent) => {
-    event.preventDefault()
-    setErrorMessage("")
-    setSuccessMessage("")
-    setIsSubmitting(true)
+  event.preventDefault();
 
-    const { data, error } = await signIn(email, password);
+  setErrorMessage("");
+  setSuccessMessage("");
+  setIsSubmitting(true);
 
-    if (error) {
-      const shouldRedirectToSignUp =
-        error.code === "user_not_found" ||
-        /user not found|account not found|no user/i.test(error.message)
+  const res = await signIn(email, password);
 
-      if (shouldRedirectToSignUp) {
-        router.replace("/sign-up")
-      } else {
-        setErrorMessage(error.message)
-      }
-    } else {
-      setSuccessMessage("Logged in successfully.")
-      console.log("Logged in", data)
-      router.push("/")
-    }
+  switch (res.status) {
+    case "SUCCESS":
+      setSuccessMessage("Logged in successfully.");
+      router.push("/");
+      break;
 
-    setIsSubmitting(false)
+    case "INVALID_CREDENTIALS":
+      setErrorMessage("Invalid email or password.");
+      break;
+
+    case "EMAIL_NOT_VERIFIED":
+      setErrorMessage("Please verify your email first.");
+      break;
+
+    case "UNKNOWN_ERROR":
+      setErrorMessage(res.message || "Something went wrong.");
+      break;
+
+    default:
+      setErrorMessage("Unexpected error occurred.");
   }
+
+    setIsSubmitting(false);
+  };
 
   return (
     <AuthFormShell
