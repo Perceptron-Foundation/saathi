@@ -1,6 +1,9 @@
 ﻿"use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { signOut } from "@/utils/auth";
 
 const blogs = [
   {
@@ -46,8 +49,12 @@ const meals = [
 ];
 
 export default function Home() {
+  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mealIndex, setMealIndex] = useState(0);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -60,6 +67,43 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    const syncAuthState = async () => {
+      const { data } = await supabase.auth.getSession();
+
+      if (!isMounted) {
+        return;
+      }
+
+      setIsAuthenticated(Boolean(data.session));
+      setIsAuthLoading(false);
+    };
+
+    void syncAuthState();
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAuthenticated(Boolean(session));
+      setIsAuthLoading(false);
+    });
+
+    return () => {
+      isMounted = false;
+      authListener.subscription.unsubscribe();
+    };
+  }, []);
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true);
+    const result = await signOut();
+    setIsLoggingOut(false);
+
+    if (result.status === "SUCCESS") {
+      router.push("/");
+    }
+  };
+
   return (
     <div className="root">
 
@@ -70,8 +114,21 @@ export default function Home() {
           <ul className="nav-links">
             <li><a href="#features">Features</a></li>
             <li><a href="#blogs">Blogs</a></li>
-            <li><a href="/sign-in">Sign In</a></li>
-            <li><a href="/sign-up" className="nav-cta">Get Started</a></li>
+            {isAuthLoading ? null : isAuthenticated ? (
+              <>
+                <li><a href="/dashboard">Dashboard</a></li>
+                <li>
+                  <button type="button" className="nav-btn" onClick={handleLogout} disabled={isLoggingOut}>
+                    {isLoggingOut ? "Logging out..." : "Logout"}
+                  </button>
+                </li>
+              </>
+            ) : (
+              <>
+                <li><a href="/sign-in">Sign In</a></li>
+                <li><a href="/sign-up" className="nav-cta">Get Started</a></li>
+              </>
+            )}
           </ul>
         </div>
       </nav>
@@ -92,8 +149,17 @@ export default function Home() {
             Personalised meal plans, 24/7 AI assistant, glucose tracking —<br />designed for people living with diabetes.
           </p>
           <div className="hero-actions">
-            <a href="/sign-up" className="btn btn--primary">Sign Up</a>
-            <a href="/sign-in" className="btn btn--ghost">Sign In →</a>
+            {isAuthLoading ? null : isAuthenticated ? (
+              <>
+                <a href="/general-ai" className="btn btn--primary">General Chat</a>
+                <a href="/dashboard" className="btn btn--ghost">Personalised Chat →</a>
+              </>
+            ) : (
+              <>
+                <a href="/sign-up" className="btn btn--primary">Sign Up</a>
+                <a href="/sign-in" className="btn btn--ghost">Sign In →</a>
+              </>
+            )}
           </div>
         </div>
 
@@ -257,6 +323,9 @@ export default function Home() {
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
         :root {
           --teal: #2ec4c4;
+          --teal-soft: #5ed9d9;
+          --cyan: #4cc9f0;
+          --mint: #8be9d4;
           --teal-dark: #1a9e9e;
           --teal-glow: rgba(46,196,196,0.18);
           --teal-subtle: rgba(46,196,196,0.09);
@@ -284,11 +353,18 @@ export default function Home() {
         .nav-links { list-style: none; display: flex; align-items: center; gap: 2rem; }
         .nav-links a { text-decoration: none; color: var(--text2); font-size: 0.9rem; transition: color 0.2s; }
         .nav-links a:hover { color: var(--text); }
+        .nav-btn { background: transparent; border: none; color: var(--text2); font-size: 0.9rem; cursor: pointer; transition: color 0.2s; }
+        .nav-btn:hover { color: var(--text); }
+        .nav-btn:disabled { color: var(--text3); cursor: not-allowed; }
         .nav-cta { background: var(--teal) !important; color: var(--bg) !important; padding: 0.5rem 1.3rem !important; border-radius: 50px; font-weight: 700 !important; font-size: 0.88rem !important; }
         .nav-cta:hover { opacity: 0.85 !important; }
 
         /* HERO */
-        .hero { min-height: 100vh; background: linear-gradient(160deg, #1f3345 0%, #1a2a38 35%, #141c26 68%, #0f1820 100%); display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 110px 2rem 70px; position: relative; overflow: hidden; }
+        .hero { min-height: 100vh; background:
+          radial-gradient(circle at 15% 18%, rgba(76,201,240,0.2) 0%, rgba(76,201,240,0) 40%),
+          radial-gradient(circle at 82% 8%, rgba(139,233,212,0.18) 0%, rgba(139,233,212,0) 38%),
+          linear-gradient(160deg, #213c53 0%, #1b3043 32%, #162634 64%, #0e1822 100%);
+          display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 110px 2rem 70px; position: relative; overflow: hidden; }
         .blob { position: absolute; border-radius: 50%; filter: blur(90px); pointer-events: none; }
         .blob-1 { width: 550px; height: 550px; background: rgba(46,196,196,0.09); top: -120px; right: -100px; }
         .blob-2 { width: 400px; height: 400px; background: rgba(14,100,120,0.13); bottom: -80px; left: -80px; }
@@ -308,7 +384,10 @@ export default function Home() {
 
         /* HERO CARDS */
         .hero-cards { display: flex; gap: 1.4rem; justify-content: center; flex-wrap: wrap; width: 100%; max-width: 900px; position: relative; z-index: 1; }
-        .glass-card { background: var(--glass); border: 1px solid var(--border); backdrop-filter: blur(18px); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem; flex: 1; min-width: 300px; max-width: 400px; text-align: left; }
+        .glass-card { background:
+          linear-gradient(145deg, rgba(94,217,217,0.08), rgba(255,255,255,0.03)),
+          var(--glass);
+          border: 1px solid var(--border); backdrop-filter: blur(18px); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.4rem; flex: 1; min-width: 300px; max-width: 400px; text-align: left; }
         .card-header { display: flex; align-items: flex-start; gap: 0.75rem; margin-bottom: 1rem; }
         .card-icon { width: 38px; height: 38px; background: var(--teal-subtle); border: 1px solid var(--teal-border); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }
         .card-icon--teal { color: var(--teal); font-size: 1rem; }
@@ -352,8 +431,12 @@ export default function Home() {
         /* SECTION SHARED */
         .section { padding: 100px 2rem; }
         .section-inner { max-width: 1160px; margin: 0 auto; }
-        .features-section { background: var(--bg); }
-        .blogs-section { background: linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%); }
+        .features-section { background:
+          radial-gradient(circle at 8% 10%, rgba(46,196,196,0.1), rgba(46,196,196,0) 38%),
+          var(--bg); }
+        .blogs-section { background:
+          radial-gradient(circle at 85% 25%, rgba(76,201,240,0.09), rgba(76,201,240,0) 42%),
+          linear-gradient(180deg, var(--bg) 0%, var(--bg2) 100%); }
         .pill { display: inline-block; background: var(--teal-subtle); border: 1px solid var(--teal-border); color: var(--teal); border-radius: 50px; padding: 0.27rem 0.82rem; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 1rem; }
         .sec-title { font-size: clamp(1.75rem, 3vw, 2.4rem); font-weight: 800; color: var(--text); margin-bottom: 0.6rem; letter-spacing: -0.02em; }
         .sec-sub { font-size: 0.95rem; color: var(--text2); margin-bottom: 2.6rem; max-width: 460px; }

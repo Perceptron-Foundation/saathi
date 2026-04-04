@@ -34,7 +34,7 @@ export default function SignIn() {
   switch (res.status) {
     case "SUCCESS":
       setSuccessMessage("Logged in successfully.");
-      router.push("/");
+      router.push("/dashboard");
       break;
 
     case "INVALID_CREDENTIALS":
