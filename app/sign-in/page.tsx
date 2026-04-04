@@ -8,8 +8,8 @@ import {
   AuthInput,
   AuthMessage,
 } from "@/components/auth/auth-form-shell"
-import { supabase } from "@/lib/supabase"
- 
+import { signIn } from "@/utils/auth" 
+
 type SubmitEvent = Parameters<
   NonNullable<React.ComponentProps<"form">["onSubmit"]>
 >[0]
@@ -28,10 +28,7 @@ export default function SignIn() {
     setSuccessMessage("")
     setIsSubmitting(true)
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { data, error } = await signIn(email, password);
 
     if (error) {
       const shouldRedirectToSignUp =

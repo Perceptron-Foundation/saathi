@@ -8,7 +8,8 @@ import {
   AuthInput,
   AuthMessage,
 } from "@/components/auth/auth-form-shell"
-import { supabase } from "@/lib/supabase"
+
+import { signUp } from "@/utils/auth"
 
 type SubmitEvent = Parameters<
   NonNullable<React.ComponentProps<"form">["onSubmit"]>
@@ -54,15 +55,7 @@ export default function SignUp() {
 
     setIsSubmitting(true)
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          name,
-        },
-      },
-    })
+    const { data, error } = await signUp(email, password, name);
 
     const isExistingUserResponse =
       error?.code === "user_already_exists" ||
