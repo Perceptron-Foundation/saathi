@@ -6,10 +6,22 @@ export async function GET(request: NextRequest) {
   const code = searchParams.get("code")
 
   if (code) {
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (!error) {
-      return NextResponse.redirect(`${origin}/dashboard`)
+      const response = NextResponse.redirect(`${origin}/dashboard`)
+      const nowInSeconds = Math.floor(Date.now() / 1000)
+      const maxAge = data.session?.expires_at
+        ? Math.max(data.session.expires_at - nowInSeconds, 0)
+        : 60 * 60 * 24 * 7
+
+      response.cookies.set("saathi-auth", "1", {
+        path: "/",
+        sameSite: "lax",
+        maxAge,
+      })
+
+      return response
     }
   }
 
