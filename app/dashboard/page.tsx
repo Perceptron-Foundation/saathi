@@ -182,18 +182,21 @@ export default function Home() {
                 title: "General Chat App for T1D",
                 desc: "Powered by Gemma 4 medical models, ask any diabetes-related question and get clinically-informed answers — available around the clock.",
                 items: ["✓ Gemma 4 medical AI models", "✓ Data source augmentation", "✓ Type 1 Diabetes specialised"],
+                href: "/general-ai",
               },
               {
                 icon: "📊", tag: "Glucose Logging",
                 title: "Smart Glucose Logging",
                 desc: "Track your readings, build streaks, and receive personalised recommendations based on your diet and exercise data.",
                 items: ["✓ Streak building & motivation", "✓ Diet + exercise recommendations", "✓ Feeds into personalised chat"],
+                href: "/glucose_log",
               },
               {
                 icon: "🤖", tag: "Personalised AI",
                 title: "Personalised Chat App",
                 desc: "A RAG-powered AI that knows your health history — generates PDF reports, sends smart reminders, and answers with your data in context.",
                 items: ["✓ Log data → RAG chat responses", "✓ PDF health reports", "✓ Smart reminders & notifications"],
+                href: "/personalised-chat",
               },
             ].map((f) => (
               <div key={f.title} className="feat-card">
@@ -204,7 +207,7 @@ export default function Home() {
                 <ul className="feat-list">
                   {f.items.map((it) => <li key={it}>{it}</li>)}
                 </ul>
-                <a href="#" className="feat-link">Learn more →</a>
+                <a href={f.href} className="feat-link">Learn more →</a>
               </div>
             ))}
           </div>
