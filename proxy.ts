@@ -18,9 +18,10 @@ export async function proxy(request: NextRequest) {
 
   const supabase = createSupabaseServerClient(request, response)
 
-  const { data } = await supabase.auth.getClaims()
-  const claims = data?.claims
-  const isAuthenticated = Boolean(claims)
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  const isAuthenticated = !!user
 
   if (pathname === "/" && isAuthenticated) {
     return NextResponse.redirect(new URL("/dashboard", request.url))
