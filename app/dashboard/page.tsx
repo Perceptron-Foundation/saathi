@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { parseCookies } from "nookies";
 import { signOut } from "@/utils/auth";
 import Link from "next/link";
 
@@ -54,7 +53,6 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [mealIndex, setMealIndex] = useState(0);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const isAuthenticated = Boolean(parseCookies()["saathi-auth"])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -117,7 +115,7 @@ export default function Home() {
           </p>
           <div className="hero-actions">
             <Link href="/general-ai" className="btn btn--primary">General Chat</Link>
-            <Link href={isAuthenticated ? "/dashboard" : "/sign-in"} className="btn btn--ghost">Personalised Chat →</Link>
+            <Link href= "/personalised-chat" className="btn btn--ghost">Personalised Chat →</Link>
           </div>
         </div>
 
