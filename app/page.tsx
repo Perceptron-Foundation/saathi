@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
 import { signOut } from "@/utils/auth";
+import { parseCookies } from "nookies";
 
 const blogs = [
   {
@@ -52,9 +52,8 @@ export default function Home() {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mealIndex, setMealIndex] = useState(0);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const isAuthenticated = Boolean(parseCookies()["saathi-auth"])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -65,33 +64,6 @@ export default function Home() {
   useEffect(() => {
     const t = setInterval(() => setMealIndex((i) => (i + 1) % meals.length), 2200);
     return () => clearInterval(t);
-  }, []);
-
-  useEffect(() => {
-    let isMounted = true;
-
-    const syncAuthState = async () => {
-      const { data } = await supabase.auth.getSession();
-
-      if (!isMounted) {
-        return;
-      }
-
-      setIsAuthenticated(Boolean(data.session));
-      setIsAuthLoading(false);
-    };
-
-    void syncAuthState();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(Boolean(session));
-      setIsAuthLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-      authListener.subscription.unsubscribe();
-    };
   }, []);
 
   const handleLogout = async () => {
@@ -114,7 +86,7 @@ export default function Home() {
           <ul className="nav-links">
             <li><a href="#features">Features</a></li>
             <li><a href="#blogs">Blogs</a></li>
-            {isAuthLoading ? null : isAuthenticated ? (
+            {isAuthenticated ? (
               <>
                 <li><a href="/dashboard">Dashboard</a></li>
                 <li>
@@ -149,7 +121,7 @@ export default function Home() {
             Personalised meal plans, 24/7 AI assistant, glucose tracking —<br />designed for people living with diabetes.
           </p>
           <div className="hero-actions">
-            {isAuthLoading ? null : isAuthenticated ? (
+            {isAuthenticated ? (
               <>
                 <a href="/general-ai" className="btn btn--primary">General Chat</a>
                 <a href="/dashboard" className="btn btn--ghost">Personalised Chat →</a>
@@ -215,8 +187,10 @@ export default function Home() {
                 Check fasting in the morning, then 2 hours after each meal for the clearest picture of how food affects your levels.
               </div>
             </div>
-            <div className="card-footer-row" style={{ marginTop: "0.75rem" }}>
-              <span className="card-footer-txt">✓ Available 24/7 &nbsp;·&nbsp; ✓ Clinically informed &nbsp;·&nbsp; ✓ No waiting</span>
+            <div className="card-footer-row mt-3">
+              <span className="card-footer-txt">
+                ✓ Available 24/7 &nbsp;·&nbsp; ✓ Clinically informed &nbsp;·&nbsp; ✓ No waiting
+              </span>
             </div>
           </div>
         </div>
