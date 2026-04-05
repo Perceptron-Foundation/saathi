@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/lib/supabase";
+import { parseCookies } from "nookies";
 import { signOut } from "@/utils/auth";
 
 const blogs = [
@@ -52,9 +52,8 @@ export default function Home() {
   const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mealIndex, setMealIndex] = useState(0);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const isAuthenticated = Boolean(parseCookies()["saathi-auth"])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -67,32 +66,6 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
-  useEffect(() => {
-    let isMounted = true;
-
-    const syncAuthState = async () => {
-      const { data } = await supabase.auth.getSession();
-
-      if (!isMounted) {
-        return;
-      }
-
-      setIsAuthenticated(Boolean(data.session));
-      setIsAuthLoading(false);
-    };
-
-    void syncAuthState();
-
-    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsAuthenticated(Boolean(session));
-      setIsAuthLoading(false);
-    });
-
-    return () => {
-      isMounted = false;
-      authListener.subscription.unsubscribe();
-    };
-  }, []);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -114,7 +87,7 @@ export default function Home() {
           <ul className="nav-links">
             <li><a href="#features">Features</a></li>
             <li><a href="#blogs">Blogs</a></li>
-            {isAuthLoading ? null : isAuthenticated ? (
+            {isAuthenticated ? (
               <>
                 <li><a href="/dashboard">Dashboard</a></li>
                 <li>

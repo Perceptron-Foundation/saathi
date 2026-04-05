@@ -1,34 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server"
+import { parseCookies } from "nookies"
+import { jwtVerify, createRemoteJWKSet } from "jose"
+import { supabaseUrl } from "@/lib/supabase"
 
-function hasSupabaseSessionCookie(request: NextRequest) {
-  const cookies = request.cookies.getAll();
+const JWKS = createRemoteJWKSet(
+  new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`)
+)
 
-  return cookies.some(({ name, value }) => {
-    if (!value) {
-      return false;
-    }
-
-    return (
-      name === "saathi-auth" ||
-      name === "sb-access-token" ||
-      name === "sb-refresh-token" ||
-      (name.startsWith("sb-") && name.includes("auth-token"))
-    );
-  });
+async function verifyToken(token: string): Promise<boolean> {
+  try {
+    await jwtVerify(token, JWKS)
+    return true
+  } catch {
+    return false
+  }
 }
 
-export function middleware(request: NextRequest) {
-  const isLoggedIn = hasSupabaseSessionCookie(request);
+export async function middleware(request: NextRequest) {
+  const cookies = parseCookies({ req: request as any })
+  const token = cookies["saathi-auth"]
 
-  if (!isLoggedIn) {
-    const signInUrl = new URL("/sign-in", request.url);
-    signInUrl.searchParams.set("next", request.nextUrl.pathname);
-    return NextResponse.redirect(signInUrl);
+  if (!token || !(await verifyToken(token))) {
+    const signInUrl = new URL("/sign-in", request.url)
+    signInUrl.searchParams.set("next", request.nextUrl.pathname)
+    return NextResponse.redirect(signInUrl)
   }
 
-  return NextResponse.next();
+  return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"],
+  matcher: ["/((?!$|sign-in|sign-up|auth/|_next/static|_next/image|favicon.ico).*)",],
 };

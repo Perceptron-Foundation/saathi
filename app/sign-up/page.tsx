@@ -2,18 +2,15 @@
 
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useState } from "react"
 import {
   AuthFormShell,
   AuthInput,
   AuthMessage,
 } from "@/components/auth/auth-form-shell"
-
 import { signUp } from "@/utils/auth"
 
-type SubmitEvent = Parameters<
-  NonNullable<React.ComponentProps<"form">["onSubmit"]>
->[0]
+type SubmitEvent = Parameters<NonNullable<React.ComponentProps<"form">["onSubmit"]>>[0]
 
 export default function SignUp() {
   const router = useRouter()
@@ -22,61 +19,51 @@ export default function SignUp() {
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [errorMessage, setErrorMessage] = useState("")
-  const [successMessage, setSuccessMessage] = useState("")
+  const [emailSent, setEmailSent] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const redirectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (redirectTimeoutRef.current) {
-        clearTimeout(redirectTimeoutRef.current)
-      }
-    }
-  }, [])
 
   const handleSignup = async (event: SubmitEvent) => {
     event.preventDefault()
-    if (redirectTimeoutRef.current) {
-      clearTimeout(redirectTimeoutRef.current)
-      redirectTimeoutRef.current = null
-    }
     setErrorMessage("")
-    setSuccessMessage("")
 
     if (!password) {
       setErrorMessage("Password is required.")
       return
     }
-
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match.")
       return
     }
 
     setIsSubmitting(true)
-
-    const { data, error } = await signUp(email, password, name);
-
-    const isExistingUserResponse =
-      error?.code === "user_already_exists" ||
-      error?.code === "email_exists" ||
-      error?.code === "conflict" ||
-      /already registered|already exists/i.test(error?.message ?? "") ||
-      (!!data.user && (data.user.identities?.length ?? 0) === 0)
-
-    if (isExistingUserResponse) {
-      setErrorMessage("Account already exists. Please sign in. Redirecting you now.")
-      redirectTimeoutRef.current = setTimeout(() => {
-        router.replace("/sign-in")
-      }, 2000)
-    } else if (error) {
-      setErrorMessage(error.message)
-    } else {
-      setSuccessMessage("Account created successfully.")
-      console.log("User created", data)
-    }
-
+    const result = await signUp(email, password, name)
     setIsSubmitting(false)
+
+    if (result.status === "EXISTING_USER") {
+      router.replace("/sign-in")
+      return
+    }
+    if (result.status === "ERROR") {
+      setErrorMessage(result.message ?? "Something went wrong. Please try again.")
+      return
+    }
+    setEmailSent(true)
+  }
+
+  if (emailSent) {
+    return (
+      <AuthFormShell
+        title="Check your inbox"
+        description="Almost there."
+        submitLabel="Done"
+        onSubmit={(event) => event.preventDefault()}
+      >
+        <AuthMessage tone="success">
+          We sent a verification link to <strong>{email}</strong>.
+          Click it to activate your account and you will be signed in automatically.
+        </AuthMessage>
+      </AuthFormShell>
+    )
   }
 
   return (
@@ -118,12 +105,8 @@ export default function SignUp() {
         type="password"
         value={password}
         onChange={(e) => {
-          const nextPassword = e.target.value
-          setPassword(nextPassword)
-
-          if (!nextPassword) {
-            setConfirmPassword("")
-          }
+          setPassword(e.target.value)
+          if (!e.target.value) setConfirmPassword("")
         }}
         autoComplete="new-password"
         required
@@ -138,10 +121,7 @@ export default function SignUp() {
         disabled={!password}
         required
       />
-      {errorMessage ? <AuthMessage tone="error">{errorMessage}</AuthMessage> : null}
-      {successMessage ? (
-        <AuthMessage tone="success">{successMessage}</AuthMessage>
-      ) : null}
+      {errorMessage && <AuthMessage tone="error">{errorMessage}</AuthMessage>}
     </AuthFormShell>
   )
 }
