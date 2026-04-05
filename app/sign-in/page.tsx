@@ -9,6 +9,7 @@ import {
   AuthMessage,
 } from "@/components/auth/auth-form-shell"
 import { signIn } from "@/utils/auth" 
+import { supabase } from "@/lib/supabase"
 
 type SubmitEvent = Parameters<
   NonNullable<React.ComponentProps<"form">["onSubmit"]>
@@ -29,12 +30,15 @@ export default function SignIn() {
   setSuccessMessage("");
   setIsSubmitting(true);
 
-  const res = await signIn(email, password);
+  const sessionData = await signIn(email, password);
 
-  switch (res.status) {
+  switch (sessionData.status) {
     case "SUCCESS":
       setSuccessMessage("Logged in successfully.");
-      router.push("/dashboard");
+      const sessionData = await supabase.auth.getSession();
+      console.log("Session data:", sessionData.data);
+
+      router.replace("/dashboard");
       break;
 
     case "INVALID_CREDENTIALS":
@@ -46,7 +50,7 @@ export default function SignIn() {
       break;
 
     case "UNKNOWN_ERROR":
-      setErrorMessage(res.message || "Something went wrong.");
+      setErrorMessage("Something went wrong.");
       break;
 
     default:
