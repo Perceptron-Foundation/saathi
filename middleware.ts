@@ -7,6 +7,8 @@ const JWKS = createRemoteJWKSet(
   new URL(`${supabaseUrl}/auth/v1/.well-known/jwks.json`)
 )
 
+const PUBLIC_ROUTES = ["/", "/sign-in", "/sign-up"]
+
 async function verifyToken(token: string): Promise<boolean> {
   try {
     await jwtVerify(token, JWKS)
@@ -17,12 +19,26 @@ async function verifyToken(token: string): Promise<boolean> {
 }
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl
   const cookies = parseCookies({ req: request as any })
   const token = cookies["saathi-auth"]
+  const isAuthenticated = token ? await verifyToken(token) : false
 
-  if (!token || !(await verifyToken(token))) {
+  if (pathname === "/" && isAuthenticated) {
+    return NextResponse.redirect(new URL("/dashboard", request.url))
+  }
+
+  const isPublic =
+    PUBLIC_ROUTES.includes(pathname) ||
+    pathname.startsWith("/auth/") ||
+    pathname.startsWith("/_next/") ||
+    pathname.startsWith("/favicon")
+
+  if (isPublic) return NextResponse.next()
+
+  if (!isAuthenticated) {
     const signInUrl = new URL("/sign-in", request.url)
-    signInUrl.searchParams.set("next", request.nextUrl.pathname)
+    signInUrl.searchParams.set("next", pathname)
     return NextResponse.redirect(signInUrl)
   }
 
@@ -30,5 +46,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!$|sign-in|sign-up|auth/|_next/static|_next/image|favicon.ico).*)",],
-};
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+}
