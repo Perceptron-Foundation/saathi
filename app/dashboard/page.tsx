@@ -4,6 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "@/utils/auth";
 import Link from "next/link";
+import { SiteNavbar } from "@/components/site-navbar";
+import { SiteFooter } from "@/components/site-footer";
 
 const blogs = [
   {
@@ -79,24 +81,13 @@ export default function Home() {
   return (
     <div className="root">
 
-      {/* ── NAVBAR ── */}
-      <nav className={`navbar ${scrolled ? "navbar--scrolled" : ""}`}>
-        <div className="nav-inner">
-          <a href="#" className="logo-badge">SAATHI</a>
-          <ul className="nav-links">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#blogs">Blogs</a></li>
-            <>
-              <li><a href="/dashboard">Dashboard</a></li>
-              <li>
-                <button type="button" className="nav-btn" onClick={handleLogout} disabled={isLoggingOut}>
-                  {isLoggingOut ? "Logging out..." : "Logout"}
-                </button>
-              </li>
-            </>
-          </ul>
-        </div>
-      </nav>
+      <SiteNavbar
+        scrolled={scrolled}
+        isAuthenticated
+        isLoggingOut={isLoggingOut}
+        onLogout={handleLogout}
+        logoHref="/dashboard"
+      />
 
       {/* ── HERO ── */}
       <section className="hero">
@@ -252,28 +243,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
-      <footer className="footer">
-        <div className="footer-inner">
-          <div className="footer-brand">
-            <span className="logo-badge" style={{ fontSize: "0.78rem" }}>SAATHI</span>
-            <p className="footer-tagline">Empowering people with diabetes through AI-powered care.</p>
-          </div>
-          <div className="footer-links">
-            {[
-              { head: "Product", links: ["Features", "Pricing", "Download App"] },
-              { head: "Resources", links: ["Blog", "Docs", "FAQ"] },
-              { head: "Company", links: ["About", "Privacy Policy", "Contact"] },
-            ].map((col) => (
-              <div key={col.head} className="footer-col">
-                <div className="footer-col-head">{col.head}</div>
-                {col.links.map((l) => <a key={l} href="#">{l}</a>)}
-              </div>
-            ))}
-          </div>
-        </div>
-        <div className="footer-bottom">© 2026 Saathi. All rights reserved.</div>
-      </footer>
+      <SiteFooter />
 
       <style jsx global>{`
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
