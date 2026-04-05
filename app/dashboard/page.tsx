@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { parseCookies } from "nookies";
 import { signOut } from "@/utils/auth";
+import Link from "next/link";
 
 const blogs = [
   {
@@ -87,21 +88,14 @@ export default function Home() {
           <ul className="nav-links">
             <li><a href="#features">Features</a></li>
             <li><a href="#blogs">Blogs</a></li>
-            {isAuthenticated ? (
-              <>
-                <li><a href="/dashboard">Dashboard</a></li>
-                <li>
-                  <button type="button" className="nav-btn" onClick={handleLogout} disabled={isLoggingOut}>
-                    {isLoggingOut ? "Logging out..." : "Logout"}
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li><a href="/sign-in">Sign In</a></li>
-                <li><a href="/sign-up" className="nav-cta">Get Started</a></li>
-              </>
-            )}
+            <>
+              <li><a href="/dashboard">Dashboard</a></li>
+              <li>
+                <button type="button" className="nav-btn" onClick={handleLogout} disabled={isLoggingOut}>
+                  {isLoggingOut ? "Logging out..." : "Logout"}
+                </button>
+              </li>
+            </>
           </ul>
         </div>
       </nav>
@@ -122,8 +116,8 @@ export default function Home() {
             Personalised meal plans, 24/7 AI assistant, glucose tracking —<br />designed for people living with diabetes.
           </p>
           <div className="hero-actions">
-            <a href="/general-ai" className="btn btn--primary">General Chat</a>
-            <a href={isAuthenticated ? "/dashboard" : "/sign-in"} className="btn btn--ghost">Personalised Chat →</a>
+            <Link href="/general-ai" className="btn btn--primary">General Chat</Link>
+            <Link href={isAuthenticated ? "/dashboard" : "/sign-in"} className="btn btn--ghost">Personalised Chat →</Link>
           </div>
         </div>
 

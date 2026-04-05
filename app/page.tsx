@@ -1,9 +1,7 @@
 ﻿"use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { signOut } from "@/utils/auth";
-import { parseCookies } from "nookies";
+import Link from "next/link";
 
 const blogs = [
   {
@@ -49,11 +47,8 @@ const meals = [
 ];
 
 export default function Home() {
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
   const [mealIndex, setMealIndex] = useState(0);
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const isAuthenticated = Boolean(parseCookies()["saathi-auth"])
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -66,41 +61,24 @@ export default function Home() {
     return () => clearInterval(t);
   }, []);
 
-  const handleLogout = async () => {
-    setIsLoggingOut(true);
-    const result = await signOut();
-    setIsLoggingOut(false);
-
-    if (result.status === "SUCCESS") {
-      router.push("/");
-    }
-  };
-
   return (
     <div className="root">
 
       {/* ── NAVBAR ── */}
       <nav className={`navbar ${scrolled ? "navbar--scrolled" : ""}`}>
         <div className="nav-inner">
-          <a href="#" className="logo-badge">SAATHI</a>
+          <Link href="/" className="logo-badge">SAATHI</Link>
+
           <ul className="nav-links">
-            <li><a href="#features">Features</a></li>
-            <li><a href="#blogs">Blogs</a></li>
-            {isAuthenticated ? (
-              <>
-                <li><a href="/dashboard">Dashboard</a></li>
-                <li>
-                  <button type="button" className="nav-btn" onClick={handleLogout} disabled={isLoggingOut}>
-                    {isLoggingOut ? "Logging out..." : "Logout"}
-                  </button>
-                </li>
-              </>
-            ) : (
-              <>
-                <li><a href="/sign-in">Sign In</a></li>
-                <li><a href="/sign-up" className="nav-cta">Get Started</a></li>
-              </>
-            )}
+            <li><Link href="#features">Features</Link></li>
+            <li><Link href="#blogs">Blogs</Link></li>
+
+            <li><Link href="/sign-in">Sign In</Link></li>
+            <li>
+              <Link href="/sign-up" className="nav-cta">
+                Get Started
+              </Link>
+            </li>
           </ul>
         </div>
       </nav>
@@ -121,17 +99,8 @@ export default function Home() {
             Personalised meal plans, 24/7 AI assistant, glucose tracking —<br />designed for people living with diabetes.
           </p>
           <div className="hero-actions">
-            {isAuthenticated ? (
-              <>
-                <a href="/general-ai" className="btn btn--primary">General Chat</a>
-                <a href="/dashboard" className="btn btn--ghost">Personalised Chat →</a>
-              </>
-            ) : (
-              <>
-                <a href="/sign-up" className="btn btn--primary">Sign Up</a>
-                <a href="/sign-in" className="btn btn--ghost">Sign In →</a>
-              </>
-            )}
+            <Link href="/sign-up" className="btn btn--primary">Sign Up</Link>
+            <Link href="/sign-in" className="btn btn--ghost">Sign In →</Link>
           </div>
         </div>
 
