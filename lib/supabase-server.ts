@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from "next/server"
 
 export function createSupabaseServerClient(
   request: NextRequest,
-  response: NextResponse
+  response?: NextResponse
 ) {
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -16,7 +16,7 @@ export function createSupabaseServerClient(
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
             request.cookies.set({ name, value, ...options })
-            response.cookies.set({ name, value, ...options })
+            response?.cookies.set({ name, value, ...options })
           })
         },
       },

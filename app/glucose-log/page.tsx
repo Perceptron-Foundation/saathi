@@ -39,8 +39,8 @@ type AuthUser = {
   };
 };
 
-const GET_RECENT_LOGS_API = "/api/sample/glucose/recent";
-const SAVE_LOG_API = "/api/sample/glucose/save";
+const GET_RECENT_LOGS_API = "/api/glucose-log";
+const SAVE_LOG_API = "/api/glucose-log";
 
 const TYPE_META: Record<ReadingType, { label: string; icon: string }> = {
   FASTING: { label: "Fasting", icon: "🌅" },
@@ -162,20 +162,10 @@ export default function GlucoseLog() {
       if (!mounted) return;
       setUserId(user.id);
 
-      const { data: sessionData } = await supabase.auth.getSession();
-      const accessToken = sessionData.session?.access_token;
-
-      const response = await fetch(
-        `${GET_RECENT_LOGS_API}?user_id=${encodeURIComponent(user.id)}&limit=100`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-          },
-          cache: "no-store",
-        }
-      );
+      const response = await fetch(GET_RECENT_LOGS_API, {
+        method: "GET",
+        cache: "no-store",
+      });
 
       if (!mounted) return;
       if (!response.ok) {
@@ -216,17 +206,10 @@ export default function GlucoseLog() {
     setDbError("");
     setIsSaving(true);
 
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-
     const response = await fetch(SAVE_LOG_API, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        user_id: userId,
         glucose_level: parseInt(glucoseLevel, 10),
         glucose_reading_type: readingType,
         meal_name: mealName || null,
@@ -234,7 +217,7 @@ export default function GlucoseLog() {
         exercise_duration: exerciseDuration !== "" ? parseInt(exerciseDuration, 10) : null,
         notes: notes || null,
       }),
-    });
+    })
 
     if (!response.ok) {
       setDbError("Could not save your reading.");
@@ -346,9 +329,11 @@ export default function GlucoseLog() {
               <label>Meal / Food Eaten</label>
               <input className="input" value={mealName} onChange={(e) => setMealName(e.target.value)} placeholder="Optional" />
 
-              <label>Exercise Done</label>
+              <label htmlFor="exercise-done">Exercise Done</label>
               <div className="exercise-row">
                 <select
+                  id="exercise-done"
+                  title="Exercise done"
                   className={`input ${errors.exerciseDone ? "input--err" : ""}`}
                   value={exerciseDone}
                   onChange={(e) => {
