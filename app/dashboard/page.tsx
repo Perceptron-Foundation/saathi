@@ -189,7 +189,7 @@ export default function Home() {
                 title: "Smart Glucose Logging",
                 desc: "Track your readings, build streaks, and receive personalised recommendations based on your diet and exercise data.",
                 items: ["✓ Streak building & motivation", "✓ Diet + exercise recommendations", "✓ Feeds into personalised chat"],
-                href: "/glucose_log",
+                href: "/glucose-log",
               },
               {
                 icon: "🤖", tag: "Personalised AI",
